@@ -1,0 +1,15 @@
+az group create --name cloudplatforms --location westeurope
+
+az deployment group create --resource-group cloudplatforms --template-file registry.bicep --parameters acrName=crudregistry
+
+az acr login --name crudregistry
+
+docker push crudregistry.azurecr.io/cloudplatforms:v1
+
+az acr repository list --name crudregistry --output table
+
+az acr scope-map create -n crudregistry-pull -r crudregistry --repository cloudplatforms content/read --description "Crudapp read token."
+
+az acr token create --name crudregistry-pulltoken --registry crudregistry --scope-map crudregistry-pull --output json
+
+az deployment group create --resource-group cloudplatforms --template-file main.bicep --parameters registryPassword={insert password}
